@@ -95,7 +95,7 @@ export default function Home({ authenticated, user }: { authenticated: boolean; 
             <>
               <Paper sx={styles.authenticatedPaper}>
                 <Typography variant="h4" sx={styles.userGreeting}>
-                  ¿Eres nuevo?
+                  Auth0 - Autenticación Simplificada
                 </Typography>
                 <Typography variant="body1" sx={{ mb: 3, color: 'text.secondary' }}>
                   Esta es una aplicación desarrollada como parte del taller evaluativo para demostrar

@@ -43,7 +43,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'auth0_app.middleware.Auth0Middleware',
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -110,41 +109,18 @@ AUTH0_CLIENT_ID = os.getenv('AUTH0_CLIENT_ID')
 AUTH0_CLIENT_SECRET = os.getenv('AUTH0_CLIENT_SECRET')
 AUTH0_MANAGEMENT_CLIENT_ID = os.getenv('AUTH0_MANAGEMENT_CLIENT_ID')
 AUTH0_MANAGEMENT_CLIENT_SECRET = os.getenv('AUTH0_MANAGEMENT_CLIENT_SECRET')
+# Audience must match the Auth0 API identifier registered in the Auth0 dashboard
+AUTH0_AUDIENCE = os.getenv('AUTH0_AUDIENCE', 'http://localhost:8000/api')
 
-# Authlib configuration
-AUTHLIB_INSECURE_TRANSPORT = os.getenv('DEBUG', 'True') == 'True'
-
-# Frontend URL (standalone SPA served by Vite or static host)
-FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
-
-# Session configuration
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'
-SESSION_COOKIE_SECURE = os.getenv('DEBUG', 'True') != 'True'
-SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = 'Lax'
-
-# CSRF configuration — cookie must be readable by JS (SPA reads it to set X-CSRFToken header)
-CSRF_COOKIE_SECURE = os.getenv('DEBUG', 'True') != 'True'
-CSRF_COOKIE_HTTPONLY = False
-CSRF_COOKIE_SAMESITE = 'Lax'
-
-# CORS configuration for React development
+# CORS — allow Authorization header from the React SPA
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://localhost:5173",
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:5173",
-    "http://0.0.0.0:3000",
-    "http://0.0.0.0:5173",
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
 ]
 
-CORS_ALLOW_CREDENTIALS = True
-
-# DRF configuration
+# DRF — JWT Bearer auth only, no sessions
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
-    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],

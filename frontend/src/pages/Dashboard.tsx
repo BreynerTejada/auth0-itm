@@ -16,14 +16,14 @@ import {
   Stack,
   Chip,
 } from '@mui/material'
+import { useAuth0 } from '@auth0/auth0-react'
 import { getUserProfile } from '../utils/auth'
 import * as styles from '../theme/dashboardStyles'
 import LogoutButton from '../components/LogoutButton'
 import LoadingSpinner from '../components/LoadingSpinner'
 
-const DJANGO_URL = import.meta.env.VITE_DJANGO_URL || 'http://localhost:8000'
-
 export default function Dashboard({ user }: { user: { email?: string } }) {
+  const { logout } = useAuth0()
   const [profile, setProfile] = useState<Record<string, unknown> | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -194,7 +194,7 @@ export default function Dashboard({ user }: { user: { email?: string } }) {
                           Editar Perfil
                         </Button>
                         <Button
-                          href={`${DJANGO_URL}/auth0/logout/`}
+                          onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
                           variant="outlined"
                           color="error"
                           sx={styles.actionButton}

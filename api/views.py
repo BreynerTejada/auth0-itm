@@ -17,12 +17,6 @@ class UserViewSet(viewsets.ViewSet):
 
     permission_classes = [IsAuth0Authenticated]
 
-    def _get_user_info(self, request):
-        return request.session.get('user', {}).get('userinfo', {})
-
-    def _get_user_id(self, user_info):
-        return user_info.get('sub')
-
     def _get_management_client(self):
         return ManagementClient(
             domain=settings.AUTH0_DOMAIN,
@@ -37,24 +31,16 @@ class UserViewSet(viewsets.ViewSet):
     @action(detail=False, methods=['get'], url_path='profile')
     def profile(self, request):
         try:
-            user_info = self._get_user_info(request)
-            user_id = self._get_user_id(user_info)
-
-            if not user_id:
-                return Response({'error': 'User ID not found'}, status=status.HTTP_400_BAD_REQUEST)
-
+            user_id = request.auth0_user_id
             _, user_data = self._get_auth0_user(user_id)
             metadata = user_data.user_metadata or {}
 
-            return Response(
-                {
-                    'email': user_info.get('email'),
-                    'name': user_info.get('name'),
-                    'sub': user_id,
-                    'picture': user_info.get('picture'),
-                    'user_metadata': metadata,
-                }
-            )
+            return Response({
+                'email': user_data.email,
+                'sub': user_id,
+                'picture': user_data.picture,
+                'user_metadata': metadata,
+            })
         except Exception as exc:
             logger.error('Error fetching user profile: %s', str(exc))
             return Response(
@@ -65,32 +51,21 @@ class UserViewSet(viewsets.ViewSet):
     @action(detail=False, methods=['get'], url_path='metadata')
     def metadata(self, request):
         try:
-            user_info = self._get_user_info(request)
-            user_id = self._get_user_id(user_info)
-
-            if not user_id:
-                return Response(
-                    {'error': 'User ID not found in session'},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
+            user_id = request.auth0_user_id
             _, user_data = self._get_auth0_user(user_id)
             metadata = user_data.user_metadata or {}
 
-            return Response(
-                {
-                    'email': user_info.get('email'),
-                    'name': user_info.get('name'),
-                    'sub': user_id,
-                    'picture': user_info.get('picture'),
-                    'user_metadata': {
-                        'tipo_documento': metadata.get('tipo_documento', ''),
-                        'numero_documento': metadata.get('numero_documento', ''),
-                        'direccion': metadata.get('direccion', ''),
-                        'telefono': metadata.get('telefono', ''),
-                    },
-                }
-            )
+            return Response({
+                'email': user_data.email,
+                'sub': user_id,
+                'picture': user_data.picture,
+                'user_metadata': {
+                    'tipo_documento': metadata.get('tipo_documento', ''),
+                    'numero_documento': metadata.get('numero_documento', ''),
+                    'direccion': metadata.get('direccion', ''),
+                    'telefono': metadata.get('telefono', ''),
+                },
+            })
         except Exception as exc:
             logger.error('Error retrieving metadata: %s', str(exc))
             return Response(
@@ -108,14 +83,7 @@ class UserViewSet(viewsets.ViewSet):
 
     def _perform_metadata_update(self, request):
         try:
-            user_info = self._get_user_info(request)
-            user_id = self._get_user_id(user_info)
-
-            if not user_id:
-                return Response(
-                    {'error': 'User ID not found in session'},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+            user_id = request.auth0_user_id
 
             serializer = UserMetadataSerializer(data=request.data)
             if not serializer.is_valid():

@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
+import { useAuth0 } from '@auth0/auth0-react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { ThemeProvider, createTheme, CssBaseline, CircularProgress, Box } from '@mui/material'
-import { checkAuth } from './utils/auth'
+import { initApiAuth } from './utils/api'
 import * as appStyles from './theme/appStyles'
 import Home from './pages/Home'
 import Dashboard from './pages/Dashboard'
@@ -16,55 +17,30 @@ const theme = createTheme({
     background: { default: '#f5f5f5' },
   },
   typography: {
-    fontFamily: [
-      '-apple-system',
-      'BlinkMacSystemFont',
-      '"Segoe UI"',
-      'Roboto',
-      '"Helvetica Neue"',
-      'Arial',
-      'sans-serif',
-    ].join(','),
+    fontFamily: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'Arial', 'sans-serif'].join(','),
   },
   components: {
-    MuiButton: {
-      styleOverrides: {
-        root: { textTransform: 'none', fontWeight: 500 },
-      },
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: { boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' },
-      },
-    },
+    MuiButton: { styleOverrides: { root: { textTransform: 'none', fontWeight: 500 } } },
+    MuiCard: { styleOverrides: { root: { boxShadow: '0 2px 8px rgba(0,0,0,0.1)' } } },
   },
 })
 
-type User = { email: string }
+type AuthUser = { email: string }
 
 export default function App() {
-  const [authenticated, setAuthenticated] = useState<boolean | null>(null)
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { isAuthenticated, isLoading, user, getAccessTokenSilently } = useAuth0()
 
   useEffect(() => {
-    const verifyAuth = async () => {
-      try {
-        const authData = await checkAuth()
-        setAuthenticated(authData.authenticated)
-        if (authData.authenticated) {
-          setUser(authData.user)
-        }
-      } catch {
-        setAuthenticated(false)
-      } finally {
-        setLoading(false)
-      }
+    if (isAuthenticated) {
+      initApiAuth(() =>
+        getAccessTokenSilently({
+          authorizationParams: { audience: import.meta.env.VITE_AUTH0_AUDIENCE },
+        })
+      )
     }
-    verifyAuth()
-  }, [])
+  }, [isAuthenticated, getAccessTokenSilently])
 
-  if (loading) {
+  if (isLoading) {
     return (
       <ThemeProvider theme={theme}>
         <CssBaseline />
@@ -75,20 +51,23 @@ export default function App() {
     )
   }
 
+  const authUser: AuthUser | null =
+    isAuthenticated && user ? { email: user.email ?? '' } : null
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
         <Box sx={appStyles.appContainer}>
           <Routes>
-            <Route path="/" element={<Home authenticated={authenticated ?? false} user={user} />} />
+            <Route path="/" element={<Home authenticated={isAuthenticated} user={authUser} />} />
             <Route
               path="/dashboard"
-              element={authenticated ? <Dashboard user={user ?? { email: '' }} /> : <Navigate to="/" replace />}
+              element={isAuthenticated ? <Dashboard user={authUser!} /> : <Navigate to="/" replace />}
             />
             <Route
               path="/profile"
-              element={authenticated ? <Profile user={user ?? { email: '' }} /> : <Navigate to="/" replace />}
+              element={isAuthenticated ? <Profile user={authUser!} /> : <Navigate to="/" replace />}
             />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

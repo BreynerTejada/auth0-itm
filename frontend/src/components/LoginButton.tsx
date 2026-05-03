@@ -1,15 +1,16 @@
 import { Button } from '@mui/material'
 import { Login } from '@mui/icons-material'
+import { useAuth0 } from '@auth0/auth0-react'
 import * as styles from '../theme/componentStyles'
 
-const DJANGO_URL = import.meta.env.VITE_DJANGO_URL || 'http://localhost:8000'
-
 export default function LoginButton() {
+  const { loginWithRedirect } = useAuth0()
+
   return (
     <Button
       variant="contained"
       color="primary"
-      href={`${DJANGO_URL}/auth0/login/`}
+      onClick={() => loginWithRedirect()}
       startIcon={<Login />}
       sx={styles.loginButton}
     >

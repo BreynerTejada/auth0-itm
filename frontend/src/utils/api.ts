@@ -2,35 +2,30 @@ import axios from 'axios'
 
 const DJANGO_URL = import.meta.env.VITE_DJANGO_URL || 'http://localhost:8000'
 
-const api = axios.create({
-  baseURL: `${DJANGO_URL}/api`,
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
+let _getAccessToken: (() => Promise<string>) | null = null
 
-const getCsrfToken = (): string => {
-  const match = document.cookie.split('; ').find((row) => row.startsWith('csrftoken='))
-  return match ? match.split('=')[1] : ''
+export function initApiAuth(getToken: () => Promise<string>) {
+  _getAccessToken = getToken
 }
 
-api.interceptors.request.use(
-  (config) => {
-    const csrfToken = getCsrfToken()
-    if (csrfToken) {
-      config.headers['X-CSRFToken'] = csrfToken
-    }
-    return config
-  },
-  (error) => Promise.reject(error)
-)
+const api = axios.create({
+  baseURL: `${DJANGO_URL}/api`,
+  headers: { 'Content-Type': 'application/json' },
+})
+
+api.interceptors.request.use(async (config) => {
+  if (_getAccessToken) {
+    const token = await _getAccessToken()
+    config.headers['Authorization'] = `Bearer ${token}`
+  }
+  return config
+})
 
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      window.location.href = `${DJANGO_URL}/auth0/login/`
+      window.location.href = '/'
     }
     return Promise.reject(error)
   }
