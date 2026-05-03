@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth0 - ITM Aplicación de Servicios Web</title>
+</head>
+<body>
+    <div id="root"></div>
+
+    <!-- CSRF Token (for React API calls) -->
+    <script>
+        window.csrfToken = '{{ csrf_token }}';
+        localStorage.setItem('csrfToken', window.csrfToken);
+    </script>
+
+    <!-- React Entry Point -->
+    {% if debug %}
+        <script type="module" src="http://localhost:5173/@vite/client"></script>
+        <script type="module" src="http://localhost:5173/src/main.tsx"></script>
+    {% else %}
+        <!-- Load the built assets - dynamically finding the latest index file -->
+        {% load static %}
+        <script type="module" src="{% static 'dist/assets/index-CtN1rrp6.js' %}"></script>
+    {% endif %}
+</body>
+</html>

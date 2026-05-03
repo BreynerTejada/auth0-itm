@@ -1,0 +1,72 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: auth0_db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-auth0_db}
+      POSTGRES_USER: ${DB_USER:-auth0_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-auth0_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-auth0_user}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - auth0_network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: auth0_frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app/frontend
+      - /app/frontend/node_modules
+    networks:
+      - auth0_network
+    command: npm run dev
+
+  django:
+    build: .
+    container_name: auth0_django
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+    stdin_open: true
+    tty: true
+    environment:
+      DEBUG: ${DEBUG:-True}
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
+      DB_ENGINE: django.db.backends.postgresql
+      DB_NAME: ${DB_NAME:-auth0_db}
+      DB_USER: ${DB_USER:-auth0_user}
+      DB_PASSWORD: ${DB_PASSWORD:-auth0_password}
+      DB_HOST: db
+      DB_PORT: 5432
+      AUTH0_DOMAIN: ${AUTH0_DOMAIN}
+      AUTH0_CLIENT_ID: ${AUTH0_CLIENT_ID}
+      AUTH0_CLIENT_SECRET: ${AUTH0_CLIENT_SECRET}
+      AUTH0_MANAGEMENT_CLIENT_ID: ${AUTH0_MANAGEMENT_CLIENT_ID}
+      AUTH0_MANAGEMENT_CLIENT_SECRET: ${AUTH0_MANAGEMENT_CLIENT_SECRET}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./:/app
+      - /app/__pycache__
+    networks:
+      - auth0_network
+
+volumes:
+  postgres_data:
+
+networks:
+  auth0_network:
+    driver: bridge
