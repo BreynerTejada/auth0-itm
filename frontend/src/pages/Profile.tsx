@@ -43,29 +43,6 @@ export default function Profile({ user }: { user: { email?: string } }) {
           {/* Profile Form */}
           <ProfileForm />
 
-          {/* Help Section */}
-          <Box sx={styles.helpSection}>
-            <Typography variant="h6" sx={styles.helpTitle}>
-              ℹ️ Ayuda
-            </Typography>
-            <Stack spacing={1}>
-              <Typography variant="body2">
-                • <strong>Tipo de Documento:</strong> Selecciona el tipo de documento de identificación
-              </Typography>
-              <Typography variant="body2">
-                • <strong>Número de Documento:</strong> Ingresa tu número sin espacios ni caracteres especiales
-              </Typography>
-              <Typography variant="body2">
-                • <strong>Dirección:</strong> Ingresa tu dirección completa
-              </Typography>
-              <Typography variant="body2">
-                • <strong>Teléfono:</strong> Incluye código de país (ej: +57 300 1234567)
-              </Typography>
-              <Typography variant="body2" sx={styles.helpSuccess}>
-                ✅ Los cambios se guardan automáticamente en Auth0 cuando presionas el botón "Guardar"
-              </Typography>
-            </Stack>
-          </Box>
         </Container>
       </Box>
 

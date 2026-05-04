@@ -40,19 +40,8 @@ services:
       - "8000:8000"
     stdin_open: true
     tty: true
-    environment:
-      DEBUG: ${DEBUG:-True}
-      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
-      DB_ENGINE: django.db.backends.postgresql
-      DB_NAME: ${DB_NAME:-auth0_db}
-      DB_USER: ${DB_USER:-auth0_user}
-      DB_PASSWORD: ${DB_PASSWORD:-auth0_password}
-      DB_HOST: db
-      DB_PORT: 5432
-      AUTH0_DOMAIN: ${AUTH0_DOMAIN}
-      AUTH0_MANAGEMENT_CLIENT_ID: ${AUTH0_MANAGEMENT_CLIENT_ID}
-      AUTH0_MANAGEMENT_CLIENT_SECRET: ${AUTH0_MANAGEMENT_CLIENT_SECRET}
-      AUTH0_AUDIENCE: ${AUTH0_AUDIENCE:-http://localhost:8000/api}
+    env_file:
+      - ./backend/.env
     depends_on:
       db:
         condition: service_healthy
